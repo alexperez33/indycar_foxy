@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+    <!--<node name="controller_spawner" pkg="controller_manager" exec="spawner.py" respawn="false"
+      output="screen"
+      args="car/simulated_hardware_controllers/steering/left
+            car/simulated_hardware_controllers/steering/right
+            joint_state_publisher"/>-->
+
+    <!-- come back to this later-->
+    <node name="controller_spawner" pkg="controller_manager" exec="spawner.py" respawn="false"
+      output="screen"
+      args="joint_state_publisher">
+    </node>
+
+    <node name="simulated_steering_driver" pkg="indyav_control" exec="simulated_steering_driver"
+      respawn="true">
+      <param name="input_topic" value="/steering"/>
+    </node>
+</launch>

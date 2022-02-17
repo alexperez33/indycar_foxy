@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<launch>
+  <set_env name="ROSCONSOLE_CONFIG_FILE" value="$(find-pkg-share vrx_gazebo)/config/custom_rosconsole.conf"/>
+  <!-- Gazebo world to load -->
+  <arg name="world" default="$(find-pkg-share vrx_gazebo)/worlds/navigation_task.world" />
+  <!-- If true, run gazebo GUI -->
+  <arg name="gui" default="true" />
+  <!-- If true, run gazebo in verbose mode -->
+  <arg name="verbose" default="false"/>
+  <!-- Set various other gazebo arguments-->
+  <arg name="extra_gazebo_args" default=""/>
+  <!-- Start in a default namespace -->
+  <arg name="namespace" default="wamv"/>
+
+  <!-- Initial USV location and attitude-->
+  <arg name="x" default="158" />
+  <arg name="y" default="108" />
+  <arg name="z" default="0.1" />
+  <arg name="P" default="0" />
+  <arg name="R" default="0" />
+  <arg name="Y" default="-2.76" />
+
+  <!-- Allow user specified thruster configurations
+       H = stern trusters on each hull
+       T = H with a lateral thruster
+       X = "holonomic" configuration -->
+  <arg name="thrust_config" default="H" />
+
+  <!-- Do we lock the vessel to the world? -->
+  <arg name="wamv_locked" default="true" />
+
+  <!-- VRX sensors enabled -->
+  <arg name="vrx_sensors_enabled" default="true" />
+
+  <!-- Start Gazebo with the world file -->
+  <include file="$(find-pkg-share gazebo_ros)/launch/gazebo.launch.py">
+    <arg name="world"   value="$(var world)"/>
+    <arg name="verbose"      value="$(var verbose)"/>
+    <arg name="pause"        value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui"          value="$(var gui)" />
+    <arg name="extra_gazebo_args" value="$(var extra_gazebo_args)"/>
+  </include>
+
+  <!-- Load robot model -->
+  <arg name="urdf" default="$(find-pkg-share wamv_gazebo)/urdf/wamv_gazebo.urdf.xacro"/>
+  <arg name="generated_urdf" default="$(find-pkg-share wamv_gazebo)/urdf/robot_description"/>
+  <arg name="cmd" 
+         default="$(exec-in-pkg xacro xacro) '$(var urdf)' > $(var generated_urdf)
+         locked:=$(var wamv_locked)
+         thruster_config:=$(var thrust_config)
+         vrx_sensors_enabled:=$(var vrx_sensors_enabled)
+         namespace:=$(var namespace)"/>
+
+  <executable cmd="$(var cmd)" name="robot_description" output="screen" shell="true" />
+
+  <!-- Spawn model in Gazebo -->
+  <node name="spawn_entity" pkg="gazebo_ros" exec="spawn_entity.py" respawn="false" output="screen"
+        args="-x $(var x) -y $(var y) -z $(var z)
+              -R $(var R) -P $(var P) -Y $(var Y)
+              -entity $(var namespace) -file $(var generated_urdf)"/>
+</launch>
